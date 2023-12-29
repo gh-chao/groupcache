@@ -29,9 +29,9 @@ import (
 	"time"
 	"unsafe"
 
+	pb "github.com/gh-chao/groupcache/groupcachepb"
+	"github.com/gh-chao/groupcache/testpb"
 	"github.com/golang/protobuf/proto"
-	pb "github.com/mailgun/groupcache/v2/groupcachepb"
-	"github.com/mailgun/groupcache/v2/testpb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ const (
 )
 
 func testSetup() {
-	stringGroup = NewGroup(stringGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
+	stringGroup = NewGroupWithWorkspace(DefaultWorkspace, stringGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
 		if key == fromChan {
 			key = <-stringc
 		}
@@ -67,7 +67,7 @@ func testSetup() {
 		return dest.SetString("ECHO:"+key, time.Time{})
 	}))
 
-	protoGroup = NewGroup(protoGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
+	protoGroup = NewGroupWithWorkspace(DefaultWorkspace, protoGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
 		if key == fromChan {
 			key = <-stringc
 		}
@@ -78,7 +78,7 @@ func testSetup() {
 		}, time.Time{})
 	}))
 
-	expireGroup = NewGroup(expireGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
+	expireGroup = NewGroupWithWorkspace(DefaultWorkspace, expireGroupName, cacheSize, GetterFunc(func(_ context.Context, key string, dest Sink) error {
 		cacheFills.Add(1)
 		return dest.SetString("ECHO:"+key, time.Now().Add(time.Millisecond*100))
 	}))
@@ -310,7 +310,7 @@ func TestPeers(t *testing.T) {
 		localHits++
 		return dest.SetString("got:"+key, time.Time{})
 	}
-	testGroup := newGroup("TestPeers-group", cacheSize, GetterFunc(getter), peerList)
+	testGroup := newGroup(DefaultWorkspace, "TestPeers-group", cacheSize, GetterFunc(getter), peerList)
 	run := func(name string, n int, wantSummary string) {
 		// Reset counters
 		localHits = 0
@@ -438,7 +438,7 @@ func (g *orderedFlightGroup) Lock(fn func()) {
 func TestNoDedup(t *testing.T) {
 	const testkey = "testkey"
 	const testval = "testval"
-	g := newGroup("testgroup", 1024, GetterFunc(func(_ context.Context, key string, dest Sink) error {
+	g := newGroup(DefaultWorkspace, "testgroup", 1024, GetterFunc(func(_ context.Context, key string, dest Sink) error {
 		return dest.SetString(testval, time.Time{})
 	}), nil)
 
@@ -522,7 +522,7 @@ func TestContextDeadlineOnPeer(t *testing.T) {
 	getter := func(_ context.Context, key string, dest Sink) error {
 		return dest.SetString("got:"+key, time.Time{})
 	}
-	testGroup := newGroup("TestContextDeadlineOnPeer-group", cacheSize, GetterFunc(getter), peerList)
+	testGroup := newGroup(DefaultWorkspace, "TestContextDeadlineOnPeer-group", cacheSize, GetterFunc(getter), peerList)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*300)
 	defer cancel()
