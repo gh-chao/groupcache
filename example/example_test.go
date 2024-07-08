@@ -1,4 +1,4 @@
-package groupcache_test
+package example
 
 import (
 	"context"

@@ -7,10 +7,18 @@ set -x
 
 PROTO_DIR=groupcachepb
 
-protoc -I=$PROTO_DIR \
-    --go_out=$PROTO_DIR \
-    $PROTO_DIR/groupcache.proto
+protoc --proto_path=$PROTO_DIR \
+  --go_opt=paths=source_relative \
+  --go_out=$PROTO_DIR \
+  groupcache.proto
 
-protoc -I=$PROTO_DIR \
-   --go_out=. \
-    $PROTO_DIR/example.proto
+protoc --proto_path=example \
+  --go_opt=paths=source_relative \
+  --go_out=example \
+  example.proto
+
+protoc --proto_path=testpb \
+  --go_opt=paths=source_relative \
+  --go_out=testpb \
+  test.proto
+

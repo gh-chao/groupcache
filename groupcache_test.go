@@ -161,8 +161,8 @@ func TestGetDupSuppressProto(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		select {
 		case v := <-resc:
-			if !reflect.DeepEqual(v, want) {
-				t.Errorf(" Got: %v\nWant: %v", proto.CompactTextString(v), proto.CompactTextString(want))
+			if !reflect.DeepEqual(v.String(), want.String()) {
+				t.Errorf(" Got: %v\nWant: %v", v.String(), want.String())
 			}
 		case <-time.After(5 * time.Second):
 			t.Errorf("timeout waiting on getter #%d of 2", i+1)
